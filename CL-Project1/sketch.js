@@ -1,6 +1,14 @@
+let descriptions = [];
+let randomDescription = "";
+let button2;
+
+
 let backgd;
+let wordData;
+
 function preload() {
   backgd = loadImage("artwork and label.png");
+  wordData = loadJSON("data.json");
 }
 
 let bubbles = [];
@@ -70,119 +78,25 @@ class Line {
   }
 }
 
-let adj = [
-  "Baroque",
-  "Bona Fide",
-  "Boondoggle",
-  "Bourgeois",
-  "Brusque",
-  "Capricious",
-  "Caustic",
-  "Cloying",
-  "Disheveled",
-  "Ephemeral",
-  "Ersatz",
-  "Esoteric",
-  "Facetious",
-  "Fastidious",
-  "Glib",
-  "Gregarious",
-  "Hedonistic",
-  "Idiosyncratic",
-  "Idyllic",
-  "Indelicate",
-  "Infinitesimal",
-  "Insidious",
-  "Lurid",
-  "Machiavellian",
-  "Maudlin",
-  "Mercenary",
-  "Minimalist",
-  "Misnomer",
-  "Narcissist",
-  "Ostentatious",
-  "Peevish",
-  "Perfunctory",
-  "Philistine",
-  "Picayune",
-  "Precocious",
-  "Quintessential",
-  "Revel",
-  "Scintillating",
-  "Spartan",
-  "Suave",
-  "Supercilious",
-  "Ubiquitous",
-  "Unrequited",
-  "Untenable",
-  "Verbose",
-  "Vicarious",
-  "Vile",
-  "Zealous",
-];
-let noun = [
-  "Accolade",
-  "Acrimony",
-  "Angst",
-  "Anomaly",
-  "Bonhomie",
-  "Bravado",
-  "Cacophony",
-  "Camaraderie",
-  "Carte blanche",
-  "Charisma",
-  "Conundrum",
-  "Deja vu",
-  "Dichotomy",
-  "Dilettante",
-  "Elan",
-  "Ennui",
-  "Epitome",
-  "Equanimity",
-  "Ersatz",
-  "Euphemism",
-  "Fait Accompli",
-  "Faux pas",
-  "Fiasco",
-  "Harbinger",
-  "Hedonist",
-  "Heresy",
-  "Junket",
-  "Litany",
-  "Malaise",
-  "Mantra",
-  "Minimalist",
-  "Misnomer",
-  "Narcissist",
-  "Nirvana",
-  "Non Sequitur",
-  "Oblivion",
-  "Panacea",
-  "Paradox",
-  "Philistine",
-  "Propriety",
-  "Quid Pro Quo",
-  "Red Herring",
-  "Rhetoric",
-  "Stigma",
-  "Stoic",
-  "Sycophant",
-  "Tete-a-tete",
-  "Tirade",
-  "Tryst",
-  "Zeitgeist",
-];
 let selectedAdj = "Untitled";
 let selectedNoun = "";
 let button;
 
 function setup() {
-  createCanvas(1450, 800);
+  canvas = createCanvas(1450, 800);
   paint = createGraphics(554,382);// create new canvas
 
-  button = createButton("?");
-  button.position(1288, 348);
+  // button for generating painting & title
+  button = createButton("+Title");
+  button.position(1268, 348);
   button.mousePressed(updatePaint);
+
+  // button for generating description
+  button2 = createButton('+Intro');
+  button2.position(1265, 440);
+  button2.mousePressed(getRandomDescription);
+  
+  fetchArtworkDescriptions();
   
   for (let i = 0; i < random(10, 120); i++) {
     let x = random(paint.width);
@@ -209,6 +123,35 @@ function setup() {
   }
 }
 
+function fetchArtworkDescriptions() {
+  try {
+    fetch('https://api.artic.edu/api/v1/artworks')
+      .then(response => response.json())
+      .then(data => {
+        if (data && data.data) {
+          descriptions = data.data.map(artwork => artwork.description);
+          redraw(); // Redraw the canvas to display descriptions
+        } else {
+          console.error('Failed to fetch data:', data);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+}
+
+function getRandomDescription() {
+  if (descriptions.length > 0) {
+    // Pick a random description
+    const randomIndex = floor(random(descriptions.length));
+    randomDescription = descriptions[randomIndex];
+    redraw(); // Redraw the canvas to display the random description
+  }
+}
+
 function draw() {
   image(backgd, 0, 0, width, height);
   noStroke();
@@ -227,10 +170,24 @@ function draw() {
   
   // draw new canvas onto main canvas
   image(paint, 233, 198);
+
+  // Display the random description on the canvas
+  strokeWeight(0);
+  textSize(12);
+  text(randomDescription, 1042, 520);
 }
+
+// CANNOT RESIZE IT PROPERLY!//
+// function windowResized(){
+//   // console.log("resized");
+  // resizeCanvas(windowWidth,windowHeight);
+  // resizeGraphics(windowWidth,windowHeight);
+// }
 
 // random text drawn from arrays
 function selectRandom() {
+  let adj = wordData.adj;
+  let noun = wordData.noun;
   selectedAdj = random(adj);
   selectedNoun = random(noun);
 }
